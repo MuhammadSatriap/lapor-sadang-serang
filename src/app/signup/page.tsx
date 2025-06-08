@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { UserPlus, LoaderCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+
 
 export default function SignUpPage() {
   const [fullName, setFullName] = useState('');
@@ -19,7 +19,7 @@ export default function SignUpPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   const supabase = createClient();
-  const router = useRouter();
+  
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -52,15 +52,18 @@ export default function SignUpPage() {
         setConfirmPassword('');
       }
 
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Terjadi kesalahan tak dikenal.');
+      }
     }
+    
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-100 p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-100 p-5 pt-25">
       <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">

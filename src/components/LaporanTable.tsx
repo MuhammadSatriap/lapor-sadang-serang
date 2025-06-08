@@ -11,10 +11,6 @@ import {
   ChevronLeft,
   ChevronRight,
   LoaderCircle,
-  CheckCircle,
-  Clock,
-  Trash2,
-  Edit,
 } from "lucide-react";
 import { updateLaporanStatus, deleteLaporan } from "@/app/actions";
 
@@ -293,19 +289,19 @@ export default function LaporanTable({
                 onClick={() => handleStatusUpdate(openDropdown, "Dikerjakan")}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
-                Set 'Dikerjakan'
+                Set &apos;Dikerjakan&apos;
               </button>
               <button
                 onClick={() => handleStatusUpdate(openDropdown, "Selesai")}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
-                Set 'Selesai'
+                Set &apos;Selesai&apos;
               </button>
               <button
                 onClick={() => handleStatusUpdate(openDropdown, "Ditolak")}
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
-                Set 'Ditolak'
+                Set &apos;Ditolak&apos;
               </button>
               <div className="my-1 h-px bg-gray-200"></div>
               <button

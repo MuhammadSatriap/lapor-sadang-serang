@@ -1,24 +1,21 @@
-// File: src/app/laporan-publik/page.tsx
-
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
-import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 import LaporanCard from "@/components/LaporanCard";
 import { Laporan } from "@/types";
 import { PlusCircle, MessageSquareWarning, Filter } from "lucide-react";
 
 type PageProps = {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export default async function PapanLaporanPage({ searchParams }: PageProps) {
-  const supabase = await createServerSupabaseClient();
-  const kategoriFilter = searchParams.kategori as string | undefined;
+  const resolvedParams = await searchParams;
+  const kategoriFilter = resolvedParams.kategori as string | undefined;
 
+  const supabase = await createServerSupabaseClient();
   let query = supabase
     .from("laporan")
-    .select("*")
+    .select("*, profiles!inner(full_name)")
     .order("created_at", { ascending: false });
 
   if (kategoriFilter && kategoriFilter !== "Semua") {
@@ -37,29 +34,28 @@ export default async function PapanLaporanPage({ searchParams }: PageProps) {
   ];
 
   return (
-    <div className="bg-gradient-to-b from-blue-50 to-slate-100 min-h-screen">
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-slate-100 px-4 sm:px-6 md:px-8 pt-[88px] pb-16 max-w-7xl mx-auto space-y-12">
-  
+    <main className="bg-gradient-to-b from-white via-blue-50 to-blue-50 min-h-screen pt-28 pb-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
         {/* HEADER */}
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center border-b pb-6 border-slate-200">
+        <section className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl shadow-sm px-6 py-6 sm:flex sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 text-balance">
               📌 Papan Laporan Warga
             </h1>
-            <p className="mt-1 text-slate-500 text-base">
+            <p className="mt-2 text-slate-600 text-base max-w-xl text-balance">
               Laporan masyarakat untuk wilayah Sadang Serang, Bandung.
             </p>
           </div>
           <Link
             href="/lapor"
-            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:from-blue-700 hover:to-cyan-600 transition"
+            className="mt-4 sm:mt-0 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:scale-105 transition-transform"
           >
             <PlusCircle className="h-5 w-5" />
             Buat Laporan Baru
           </Link>
-        </div>
+        </section>
 
-        {/* FILTER CARD */}
+        {/* FILTER */}
         <section>
           <div className="flex items-center gap-2 mb-3 text-slate-700">
             <Filter className="h-5 w-5" />
@@ -67,7 +63,7 @@ export default async function PapanLaporanPage({ searchParams }: PageProps) {
               Filter Berdasarkan Kategori
             </h2>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex overflow-x-auto gap-3 pb-3 pt-3 pl-3 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
             {daftarKategori.map((kategori) => {
               const isActive =
                 (kategori === "Semua" && !kategoriFilter) ||
@@ -80,10 +76,10 @@ export default async function PapanLaporanPage({ searchParams }: PageProps) {
                       ? "/laporan-publik"
                       : `/laporan-publik?kategori=${kategori}`
                   }
-                  className={`rounded-full px-5 py-1.5 text-sm font-medium border transition-all duration-200 ${
+                  className={`rounded-full px-5 py-1.5 text-sm font-medium border transition-all duration-200 transform hover:scale-105 ${
                     isActive
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                      ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white border-blue-700 shadow-md"
+                      : "bg-white/80 text-gray-700 border-gray-200 hover:bg-blue-100 hover:border-blue-300"
                   }`}
                 >
                   {kategori}
@@ -96,7 +92,7 @@ export default async function PapanLaporanPage({ searchParams }: PageProps) {
         {/* DAFTAR LAPORAN */}
         <section>
           {error && (
-            <div className="rounded-md bg-red-50 p-4 text-center text-sm text-red-700 border border-red-200">
+            <div className="rounded-md bg-red-50 border border-red-200 p-4 text-center text-sm text-red-700 shadow-sm">
               Gagal memuat laporan: {error.message}
             </div>
           )}
@@ -108,13 +104,18 @@ export default async function PapanLaporanPage({ searchParams }: PageProps) {
               </h2>
               <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {laporans.map((laporan: Laporan) => (
-                  <LaporanCard key={laporan.id} laporan={laporan} />
+                  <div
+                    key={laporan.id}
+                    className="transition-transform hover:scale-[1.015]"
+                  >
+                    <LaporanCard laporan={laporan} />
+                  </div>
                 ))}
               </div>
             </div>
           ) : (
             !error && (
-              <div className="mt-12 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-10 text-center bg-white shadow-sm">
+              <div className="mt-16 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white/60 p-10 text-center shadow-sm">
                 <MessageSquareWarning className="h-10 w-10 text-slate-400" />
                 <h3 className="mt-3 text-lg font-semibold text-slate-900">
                   Tidak Ada Laporan
@@ -123,12 +124,30 @@ export default async function PapanLaporanPage({ searchParams }: PageProps) {
                   Tidak ada laporan yang cocok dengan filter{" "}
                   <strong>{kategoriFilter ?? "Semua"}</strong>.
                 </p>
+                <Link
+                  href="/lapor"
+                  className="mt-6 inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white text-sm font-medium hover:bg-blue-700"
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  Buat Laporan Sekarang
+                </Link>
               </div>
             )
           )}
         </section>
-      
+      </div>
     </main>
-    </div>
   );
+}
+
+export async function generateMetadata({ searchParams }: PageProps) {
+  const resolvedParams = await searchParams;
+  const kategoriFilter = resolvedParams.kategori as string | undefined;
+
+  return {
+    title: kategoriFilter
+      ? `Laporan ${kategoriFilter} | Lapor Warga`
+      : "Papan Laporan Warga",
+    description: "Lihat semua laporan warga di wilayah Sadang Serang, Bandung.",
+  };
 }

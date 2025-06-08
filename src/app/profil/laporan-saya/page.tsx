@@ -21,69 +21,77 @@ export default async function LaporanSayaPage() {
     redirect('/login');
   }
 
-  // LOGIKA UTAMA: Mengambil laporan dengan user_id yang cocok
   const { data: laporans, error } = await supabase
     .from('laporan')
     .select('*')
-    .eq('user_id', user.id) // <-- Filter hanya untuk laporan milik user ini
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   return (
-    // Menggunakan layout dan style persis seperti desain Anda
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-slate-100">
-      <div className="mx-auto max-w-7xl space-y-12 px-4 pt-28 pb-16 sm:px-6 lg:px-8">
+    <main className="bg-gradient-to-b from-white via-blue-50 to-blue-50 min-h-screen pt-28 pb-20">
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 space-y-12">
 
-        {/* HEADER - Teks diubah untuk konteks halaman ini */}
-        <section className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center border-b border-slate-200 pb-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-              Laporan Saya
-            </h1>
-            <p className="mt-1 text-slate-600">
-              Riwayat semua laporan yang telah Anda kirimkan.
-            </p>
-          </div>
-          <Link
-            href="/lapor"
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:scale-105"
-          >
-            <PlusCircle className="h-5 w-5" />
-            Buat Laporan Baru
-          </Link>
-        </section>
-
-        {/* Filter tidak kita perlukan di halaman ini, jadi kita langsung ke daftar laporan */}
-
-        {/* DAFTAR LAPORAN */}
-        <section>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4 text-center text-sm text-red-700 border border-red-200">
-              Gagal memuat laporan: {error.message}
-            </div>
-          )}
-
-          {!error && laporans && laporans.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {laporans.map((laporan: Laporan) => (
-                <LaporanCard key={laporan.id} laporan={laporan} />
-              ))}
-            </div>
-          ) : (
-            !error && (
-              <div className="mt-12 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-10 text-center bg-white/50 shadow-sm">
-                <MessageSquareWarning className="mx-auto h-10 w-10 text-slate-400" />
-                <h3 className="mt-3 text-lg font-semibold text-slate-900">
-                  Anda Belum Punya Laporan
-                </h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  Semua laporan yang Anda buat akan muncul di sini.
-                </p>
-              </div>
-            )
-          )}
-        </section>
-      
+    {/* HEADER */}
+    <section className="bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl shadow-sm px-6 py-6 sm:flex sm:items-center sm:justify-between">
+      <div>
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 text-balance">
+          Laporan Saya
+        </h1>
+        <p className="mt-2 text-slate-600 text-base max-w-xl text-balance">
+          Riwayat semua laporan yang telah Anda kirimkan akan ditampilkan di sini.
+        </p>
       </div>
-    </main>
+      <Link
+        href="/lapor"
+        className="mt-4 sm:mt-0 inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:scale-105 transition-transform"
+      >
+        <PlusCircle className="h-5 w-5" />
+        Buat Laporan Baru
+      </Link>
+    </section>
+
+    {/* LIST LAPORAN */}
+    <section>
+      {error && (
+        <div className="rounded-md bg-red-50 border border-red-200 p-4 text-center text-sm text-red-700 shadow-sm">
+          Gagal memuat laporan: {error.message}
+        </div>
+      )}
+
+      {!error && laporans && laporans.length > 0 ? (
+        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {laporans.map((laporan: Laporan) => (
+            <div
+              key={laporan.id}
+              className="transition-all hover:scale-[1.015] hover:ring-2 hover:ring-blue-400/30 rounded-xl"
+            >
+              <LaporanCard laporan={laporan} />
+            </div>
+          ))}
+        </div>
+      ) : (
+        !error && (
+          <div className="mt-16 flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white/60 p-10 text-center shadow-sm">
+            <MessageSquareWarning className="h-10 w-10 text-slate-400" />
+            <h3 className="mt-3 text-lg font-semibold text-slate-900">
+              Anda Belum Punya Laporan
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              Semua laporan yang Anda buat akan muncul di sini.
+            </p>
+            <Link
+              href="/lapor"
+              className="mt-6 inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white text-sm font-medium hover:bg-blue-700"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Buat Laporan Sekarang
+            </Link>
+          </div>
+        )
+      )}
+    </section>
+  </div>
+</main>
+
   );
 }

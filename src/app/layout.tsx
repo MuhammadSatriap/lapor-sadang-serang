@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header"; // <-- 1. Impor Head
+import Footer from "@/components/Footer";
 import 'leaflet/dist/leaflet.css';
 
 
@@ -33,6 +34,7 @@ export default function RootLayout({
       >
         <Header /> {/* <-- 2. Letakkan Header di sini */}
         {children}
+        <Footer />
         <div id="dropdown-portal"></div>
       </body>
     </html>

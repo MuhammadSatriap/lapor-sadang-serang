@@ -29,19 +29,12 @@ type MapProps = {
 
 export default function Map({ laporans }: MapProps) {
   // Fungsi untuk parse koordinat dari format PostGIS "POINT(lon lat)"
-  const parsePoint = (pointString: string): [number, number] | null => {
-    if (!pointString || typeof pointString !== 'string') return null;
-    const match = pointString.match(/POINT\(([-\d.]+) ([-\d.]+)\)/);
-    if (match) {
-      return [parseFloat(match[2]), parseFloat(match[1])]; // Leaflet: [lat, lon]
-    }
-    return null;
-  };
+
   
   
 
   return (
-    <MapContainer center={[-6.9039, 107.6186]} zoom={14} scrollWheelZoom={true} style={{ height: 'calc(100vh - 120px)', width: '100%' }} className="rounded-lg shadow-lg">
+    <MapContainer center={[-6.891680, 107.626695]} zoom={15 } scrollWheelZoom={true}  className="h-full w-full rounded-lg shadow-lg z-10">
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

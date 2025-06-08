@@ -4,7 +4,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // <-- Impor useRouter untuk redirect
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 // ... di dalam komponennya
 const supabase = createClient();
@@ -15,7 +15,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter(); // <-- Inisialisasi router
+  const router = useRouter();
+  
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,13 +35,16 @@ export default function LoginPage() {
       
       // Jika login berhasil, arahkan ke halaman utama
       //router.push('/');
-      window.location.href = '/';
+      router.push('/');
 
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('Terjadi kesalahan tak dikenal.');
+      }
     }
+    
   };
 
   return (
@@ -64,7 +68,7 @@ export default function LoginPage() {
               <input
                 id="email" name="email" type="email" autoComplete="email" required
                 value={email} onChange={(e) => setEmail(e.target.value)}
-                className="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 placeholder-slate-400 shadow-sm transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                className="block w-full appearance-none rounded-md border border-slate-300 px-3 py-2 placeholder-slate-400 shadow-sm transition-colors duration-200 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm text-slate-900"
               />
             </div>
           </div>

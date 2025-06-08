@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { useState, useRef } from 'react';
 import { createLaporan } from '@/app/actions';
-import { FileUp, Trash2, Send, LoaderCircle, MapPin } from 'lucide-react';
+import { Trash2, Send, LoaderCircle, MapPin } from 'lucide-react';
 
 export default function LaporPage() {
   const [lokasi, setLokasi] = useState<{ lat: number; lon: number } | null>(null);
@@ -67,7 +67,7 @@ export default function LaporPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-100 p-4">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-100 p-5 pt-25">
       <div className="w-full max-w-lg rounded-xl bg-white p-8 shadow-lg">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Buat Laporan Baru</h1>
