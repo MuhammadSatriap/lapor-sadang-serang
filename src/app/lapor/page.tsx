@@ -1,10 +1,10 @@
-// File: src/app/lapor/page.tsx
 'use client';
 
 import Link from 'next/link';
 import { useState, useRef } from 'react';
 import { createLaporan } from '@/app/actions';
 import { Trash2, Send, LoaderCircle, MapPin } from 'lucide-react';
+import imageCompression from 'browser-image-compression';
 
 export default function LaporPage() {
   const [lokasi, setLokasi] = useState<{ lat: number; lon: number } | null>(null);
@@ -33,22 +33,37 @@ export default function LaporPage() {
     );
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+      const originalFile = e.target.files[0];
+      try {
+        const options = {
+          maxSizeMB: 1, // Maks 1MB
+          maxWidthOrHeight: 1024,
+          useWebWorker: true,
+        };
+        const compressedFile = await imageCompression(originalFile, options);
+        console.log('Original size:', (originalFile.size / 1024 / 1024).toFixed(2), 'MB');
+        console.log('Compressed size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
+        setFile(compressedFile);
+      } catch (err) {
+        console.error('Compression error:', err);
+        setFile(originalFile); // fallback
+      }
     } else {
       setFile(null);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    const formData = new FormData(formRef.current!);
-
+  const submitAction = async (formData: FormData) => {
     if (lokasi) {
       formData.append('lat', lokasi.lat.toString());
       formData.append('lon', lokasi.lon.toString());
+    }
+
+    if (file) {
+      formData.delete('file'); // Hapus input file default
+      formData.append('file', file, file.name); // Tambah file compress
     }
 
     setIsLoading(true);
@@ -76,7 +91,7 @@ export default function LaporPage() {
           <p className="mt-2 text-slate-600">Sampaikan masalah yang Anda temukan.</p>
         </div>
 
-        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
+        <form ref={formRef} action={submitAction} className="space-y-6">
           <div>
             <label htmlFor="kategori" className="block text-sm font-medium text-slate-700">Kategori Laporan</label>
             <select
@@ -94,30 +109,32 @@ export default function LaporPage() {
 
           <div>
             <label htmlFor="deskripsi" className="block text-sm font-medium text-slate-700">Deskripsi Laporan</label>
-            <textarea
-              id="deskripsi" name="deskripsi" rows={4} required
-              className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              placeholder="Jelaskan detail masalah yang Anda lihat, termasuk lokasi spesifik."
-            />
+            <div className="mt-1">
+              <textarea
+                id="deskripsi" name="deskripsi" rows={4} required
+                className="block w-full rounded-md border-gray-300 px-3 py-2 text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                placeholder="Jelaskan detail masalah yang Anda lihat, termasuk lokasi spesifik."
+              />
+            </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700">Lokasi Masalah</label>
-            <button
-              type="button" onClick={handleGetLocation} disabled={isGettingLocation}
-              className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isGettingLocation ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <MapPin className="h-5 w-5" />}
-              {isGettingLocation ? 'Mencari Lokasi...' : (lokasi ? 'Lokasi Didapatkan!' : 'Dapatkan Lokasi Saya')}
-            </button>
-            {lokasi && (
-              <p className="mt-2 text-xs text-green-600">Lat: {lokasi.lat.toFixed(5)}, Lon: {lokasi.lon.toFixed(5)}</p>
-            )}
+            <div className="mt-1">
+              <button
+                type="button" onClick={handleGetLocation} disabled={isGettingLocation}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isGettingLocation ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <MapPin className="h-5 w-5" />}
+                {isGettingLocation ? 'Mencari Lokasi...' : (lokasi ? 'Lokasi Didapatkan!' : 'Dapatkan Lokasi Saya')}
+              </button>
+              {lokasi && (<p className="mt-2 text-xs text-green-600">Lat: {lokasi.lat.toFixed(5)}, Lon: {lokasi.lon.toFixed(5)}</p>)}
+            </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700">Unggah Foto (Bukti)</label>
-            <input 
+            <input
               name="file" type="file" required
               onChange={handleFileChange}
               className="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
@@ -143,16 +160,8 @@ export default function LaporPage() {
             </button>
           </div>
 
-          {error && (
-            <div className="rounded-md bg-red-50 p-3">
-              <p className="text-sm font-medium text-red-700">{error}</p>
-            </div>
-          )}
-          {success && (
-            <div className="rounded-md bg-green-50 p-3">
-              <p className="text-sm font-medium text-green-800">{success}</p>
-            </div>
-          )}
+          {error && (<div className="rounded-md bg-red-50 p-3"><p className="text-sm font-medium text-red-700">{error}</p></div>)}
+          {success && (<div className="rounded-md bg-green-50 p-3"><p className="text-sm font-medium text-green-800">{success}</p></div>)}
         </form>
 
         <div className="mt-6 text-center">
