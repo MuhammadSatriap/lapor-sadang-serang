@@ -38,11 +38,10 @@ const StatusBadge = ({ status }: { status: string }) => {
   return <span className={`${baseClasses} ${colorClasses}`}>{status}</span>;
 };
 
-// Komponen Portal (Pintu Ajaib)
+// Komponen Portal untuk Dropdown
 function DropdownPortal({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  // Pastikan document ada sebelum createPortal, untuk menghindari error SSR
   return mounted
     ? createPortal(children, document.getElementById("dropdown-portal")!)
     : null;
@@ -68,24 +67,22 @@ export default function LaporanTable({
   const [isLoading, setIsLoading] = useState<string | null>(null);
   const buttonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
-  
-
   // --- LOGIKA SEARCH & DEBOUNCING ---
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
 
   useEffect(() => {
     const timer = setTimeout(() => {
       const params = new URLSearchParams(searchParams);
       if (searchTerm) {
-        params.set('q', searchTerm);
+        params.set("q", searchTerm);
       } else {
-        params.delete('q');
+        params.delete("q");
       }
       // Selalu reset ke halaman 1 saat melakukan pencarian baru
-      params.set('page', '1');
+      params.set("page", "1");
       router.replace(`${pathname}?${params.toString()}`);
     }, 500); // Tunggu 500ms setelah user berhenti mengetik
 
@@ -121,13 +118,24 @@ export default function LaporanTable({
     e.stopPropagation();
     if (openDropdown === id) {
       setOpenDropdown(null);
+      setDropdownPos(null);
     } else {
       const button = buttonRefs.current[id];
       if (button) {
         const rect = button.getBoundingClientRect();
+        const dropdownHeight = 200; // Estimasi tinggi dropdown (sesuaikan jika perlu)
+        const padding = 4;
+        let top = rect.bottom + padding;
+        const left = rect.right - 224; // Lebar dropdown w-56 = 224px
+
+        // Jika dropdown akan keluar dari viewport di bagian bawah
+        if (top + dropdownHeight > window.innerHeight) {
+          top = rect.top - dropdownHeight - padding; // Pindah ke atas tombol
+        }
+
         setDropdownPos({
-          top: rect.bottom + window.scrollY + 8,
-          left: rect.left + window.scrollX - 224 + rect.width, // 224 = lebar dropdown (w-56)
+          top,
+          left,
         });
         setOpenDropdown(id);
       }
@@ -135,7 +143,10 @@ export default function LaporanTable({
   };
 
   useEffect(() => {
-    const closeDropdown = () => setOpenDropdown(null);
+    const closeDropdown = () => {
+      setOpenDropdown(null);
+      setDropdownPos(null);
+    };
     window.addEventListener("click", closeDropdown);
     return () => window.removeEventListener("click", closeDropdown);
   }, []);
@@ -145,15 +156,15 @@ export default function LaporanTable({
       <div className="space-y-4">
         {/* Search Bar */}
         <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-        <input 
-          type="text"
-          placeholder="Cari laporan berdasarkan kategori atau deskripsi..."
-          className="w-full rounded-md border-gray-300 pl-10 pr-4 py-2 text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Cari laporan berdasarkan kategori atau deskripsi..."
+            className="w-full rounded-md border-gray-300 pl-10 pr-4 py-2 text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
         {/* Tabel Laporan */}
         <div className="overflow-x-auto rounded-lg bg-white shadow ring-1 ring-gray ring-opacity-5">
@@ -269,8 +280,8 @@ export default function LaporanTable({
           <div
             style={{
               position: "fixed",
-              top: dropdownPos.top,
-              left: dropdownPos.left,
+              top: `${dropdownPos.top}px`,
+              left: `${dropdownPos.left}px`,
               zIndex: 50,
             }}
             className="w-56 rounded-md shadow-lg bg-white ring-1 ring-gray ring-opacity-5"
@@ -286,23 +297,23 @@ export default function LaporanTable({
               </Link>
               <div className="my-1 h-px bg-gray-200"></div>
               <button
-                onClick={() => handleStatusUpdate(openDropdown, "Dikerjakan")}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Set &apos;Dikerjakan&apos;
-              </button>
-              <button
-                onClick={() => handleStatusUpdate(openDropdown, "Selesai")}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Set &apos;Selesai&apos;
-              </button>
-              <button
-                onClick={() => handleStatusUpdate(openDropdown, "Ditolak")}
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
-                Set &apos;Ditolak&apos;
-              </button>
+  onClick={() => handleStatusUpdate(openDropdown, "Dikerjakan")}
+  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+>
+  Set &apos;Dikerjakan&apos;
+</button>
+<button
+  onClick={() => handleStatusUpdate(openDropdown, "Selesai")}
+  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+>
+  Set &apos;Selesai&apos;
+</button>
+<button
+  onClick={() => handleStatusUpdate(openDropdown, "Ditolak")}
+  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+>
+  Set &apos;Ditolak&apos;
+</button>
               <div className="my-1 h-px bg-gray-200"></div>
               <button
                 onClick={() => handleDelete(openDropdown)}

@@ -1,4 +1,4 @@
-// File: src/app/lapor/page.tsx (Final dengan Geolocation & Server Action)
+// File: src/app/lapor/page.tsx
 'use client';
 
 import Link from 'next/link';
@@ -13,8 +13,7 @@ export default function LaporPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  // State untuk file, agar kita bisa tampilkan namanya di UI
-  const [file, setFile] = useState<File | null>(null); 
+  const [file, setFile] = useState<File | null>(null);
 
   const handleGetLocation = () => {
     setIsGettingLocation(true);
@@ -33,7 +32,7 @@ export default function LaporPage() {
       }
     );
   };
-  
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
@@ -42,8 +41,11 @@ export default function LaporPage() {
     }
   };
 
-  // Fungsi ini sekarang hanya membungkus pemanggilan Server Action
-  const submitAction = async (formData: FormData) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(formRef.current!);
+
     if (lokasi) {
       formData.append('lat', lokasi.lat.toString());
       formData.append('lon', lokasi.lon.toString());
@@ -74,7 +76,7 @@ export default function LaporPage() {
           <p className="mt-2 text-slate-600">Sampaikan masalah yang Anda temukan.</p>
         </div>
 
-        <form ref={formRef} action={submitAction} className="space-y-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="kategori" className="block text-sm font-medium text-slate-700">Kategori Laporan</label>
             <select
@@ -92,32 +94,30 @@ export default function LaporPage() {
 
           <div>
             <label htmlFor="deskripsi" className="block text-sm font-medium text-slate-700">Deskripsi Laporan</label>
-            <div className="mt-1">
-              <textarea
-                id="deskripsi" name="deskripsi" rows={4} required
-                className="block w-full rounded-md border-gray-300 px-3 py-2 text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                placeholder="Jelaskan detail masalah yang Anda lihat, termasuk lokasi spesifik."
-              />
-            </div>
+            <textarea
+              id="deskripsi" name="deskripsi" rows={4} required
+              className="mt-1 block w-full rounded-md border-gray-300 px-3 py-2 text-slate-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              placeholder="Jelaskan detail masalah yang Anda lihat, termasuk lokasi spesifik."
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-700">Lokasi Masalah</label>
-            <div className="mt-1">
-              <button
-                type="button" onClick={handleGetLocation} disabled={isGettingLocation}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isGettingLocation ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <MapPin className="h-5 w-5" />}
-                {isGettingLocation ? 'Mencari Lokasi...' : (lokasi ? 'Lokasi Didapatkan!' : 'Dapatkan Lokasi Saya')}
-              </button>
-              {lokasi && (<p className="mt-2 text-xs text-green-600">Lat: {lokasi.lat.toFixed(5)}, Lon: {lokasi.lon.toFixed(5)}</p>)}
-            </div>
+            <button
+              type="button" onClick={handleGetLocation} disabled={isGettingLocation}
+              className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isGettingLocation ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <MapPin className="h-5 w-5" />}
+              {isGettingLocation ? 'Mencari Lokasi...' : (lokasi ? 'Lokasi Didapatkan!' : 'Dapatkan Lokasi Saya')}
+            </button>
+            {lokasi && (
+              <p className="mt-2 text-xs text-green-600">Lat: {lokasi.lat.toFixed(5)}, Lon: {lokasi.lon.toFixed(5)}</p>
+            )}
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-slate-700">Unggah Foto (Bukti)</label>
-             <input 
+            <input 
               name="file" type="file" required
               onChange={handleFileChange}
               className="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
@@ -132,7 +132,7 @@ export default function LaporPage() {
               </div>
             )}
           </div>
-          
+
           <div className="pt-2">
             <button
               type="submit" disabled={isLoading}
@@ -142,14 +142,23 @@ export default function LaporPage() {
               {isLoading ? 'Mengirim Laporan...' : 'Kirim Laporan'}
             </button>
           </div>
-          {error && (<div className="rounded-md bg-red-50 p-3"><p className="text-sm font-medium text-red-700">{error}</p></div>)}
-          {success && (<div className="rounded-md bg-green-50 p-3"><p className="text-sm font-medium text-green-800">{success}</p></div>)}
+
+          {error && (
+            <div className="rounded-md bg-red-50 p-3">
+              <p className="text-sm font-medium text-red-700">{error}</p>
+            </div>
+          )}
+          {success && (
+            <div className="rounded-md bg-green-50 p-3">
+              <p className="text-sm font-medium text-green-800">{success}</p>
+            </div>
+          )}
         </form>
 
         <div className="mt-6 text-center">
-           <Link href="/laporan-publik" className="text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline">
+          <Link href="/laporan-publik" className="text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline">
             &larr; Kembali ke Papan Laporan
-           </Link>
+          </Link>
         </div>
       </div>
     </main>
