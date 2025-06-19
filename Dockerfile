@@ -7,17 +7,17 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --omit=dev
+# Install semua dependencies (termasuk devDependencies)
+RUN npm ci
 
-# Copy the rest of the app
+# Copy semua file project
 COPY . .
 
-# Build the app
+# Build Next.js
 RUN npm run build
 
 # Expose port
 EXPOSE 3000
 
-# Start Next.js production server
+# Start Next.js
 CMD ["npm", "start"]
