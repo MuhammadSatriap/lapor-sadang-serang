@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  IMAGE_NAME: ghcr.io/MuhammadSatriap/lapor-sadang-serang
+  IMAGE_NAME: ghcr.io/muhammadsatriap/lapor-sadang-serang
 
 jobs:
   build_and_push:
