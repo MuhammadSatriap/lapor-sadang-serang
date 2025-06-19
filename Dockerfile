@@ -1,51 +1,39 @@
-# Gunakan image Node.js ringan
-FROM node:20-alpine AS builder
+# --- Stage 1: Build ---
+FROM node:18-alpine AS builder
 
-# Set workdir
 WORKDIR /app
 
-# Salin file dependency
-COPY package.json package-lock.json* ./
+# Salin package.json dan package-lock.json
+COPY package*.json ./
 
-# Install dependency (ci untuk production lock)
+# Install dependencies
 RUN npm ci
 
-# Salin semua source code
+# Salin semua source code (kecuali yang di .dockerignore)
 COPY . .
 
-# Salin env production (kalau ada file .env.production di repo)
+# Salin env untuk build (file ini sudah ada di server saat build)
 COPY .env.production .env.production
 
-# Set env untuk build
-ENV NODE_ENV=production
-
-# Build Next.js app
+# Build Next.js untuk production
 RUN npm run build
 
-# ----------------------------------------
-# Production image
-FROM node:20-alpine AS runner
+# --- Stage 2: Production image ---
+FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Salin dependency hanya untuk production (lebih ringan)
+# Install only production deps
 COPY --from=builder /app/node_modules ./node_modules
 
-# Salin Next.js .next output
+# Copy output build
 COPY --from=builder /app/.next ./.next
-
-# Salin public assets
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
 
-# Salin package.json untuk start
-COPY --from=builder /app/package.json ./
+# Salin env file ke image (opsional kalau app butuh saat runtime)
+COPY .env.production .env.production
 
-# Salin env production ke runtime (opsional, atau inject dari EC2 env)
-COPY --from=builder /app/.env.production .env.production
-
-# Expose port
 EXPOSE 3000
 
-# Jalankan app
-ENV NODE_ENV=production
 CMD ["npm", "start"]
