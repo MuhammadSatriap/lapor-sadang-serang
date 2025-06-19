@@ -49,7 +49,7 @@ export default async function LandingPage() {
               className="mb-4 text-4xl font-extrabold leading-tight tracking-tight text-white md:text-5xl xl:text-6xl animate-fade-in-up"
               style={{ textShadow: "2px 2px 6px rgba(0, 0, 0, 0.6)" }}
             >
-              Suarakan Masalah, Bangun Perubahan
+              Suarakan Masalah, Bangun Perubahan CI/CD
             </h1>
             <p
               className="mb-6 max-w-2xl font-light text-gray-100 md:text-lg lg:mb-8 lg:text-xl animate-fade-in-up animation-delay-200"
