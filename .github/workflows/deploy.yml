@@ -12,20 +12,16 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Build
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app
         run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      
-      - name: Start app
-        run: npx next start -p 3000
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      
 
-      - name: Upload to VPS
+      - name: Upload build to VPS
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -34,7 +30,7 @@ jobs:
           source: ".next,package.json,public,next.config.js"
           target: "/home/ubuntu/lapor-sadang-serang"
 
-      - name: Restart PM2 on VPS
+      - name: SSH & restart PM2
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -43,4 +39,4 @@ jobs:
           script: |
             cd /home/ubuntu/lapor-sadang-serang
             npm ci --omit=dev
-            pm2 restart lapor-app || pm2 start "npx next start -p 3000 -H 0.0.0.0" --name lapor-app
+            pm2 start "npx next start -p 3000 -H 0.0.0.0" --name lapor-app || pm2 reload lapor-app
