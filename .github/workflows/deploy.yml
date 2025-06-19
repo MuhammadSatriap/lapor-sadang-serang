@@ -1,4 +1,4 @@
-name: Deploy to VPS with Docker Image
+name: Build and Deploy
 
 on:
   push:
@@ -11,42 +11,25 @@ env:
 jobs:
   build_and_push:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Login to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      - name: Build Docker image
-        run: docker build -t $IMAGE_NAME:latest .
-
-      - name: Push Docker image
-        run: docker push $IMAGE_NAME:latest
-
-  deploy:
-    needs: build_and_push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy on VPS
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            echo "Login ke GHCR"
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            echo "Pull image"
-            docker pull $IMAGE_NAME:latest
-            echo "Stop & remove container lama"
-            docker stop lapor-sadang-serang || true
-            docker rm lapor-sadang-serang || true
-            echo "Run container baru"
-            docker run -d --name lapor-sadang-serang -p 3000:3000 \
-              -e NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} \
-              -e NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
-              $IMAGE_NAME:latest
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        run: |
+          docker build \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} \
+            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
+            -t $IMAGE_NAME:latest .
+          docker push $IMAGE_NAME:latest
