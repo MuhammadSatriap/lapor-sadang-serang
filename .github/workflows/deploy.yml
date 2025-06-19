@@ -1,38 +1,52 @@
-name: Deploy to VPS
+name: Deploy to VPS with Docker Image
 
 on:
   push:
     branches:
       - main
 
+env:
+  IMAGE_NAME: ghcr.io/YOUR_USERNAME/lapor-sadang-serang
+
 jobs:
-  deploy:
+  build_and_push:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.8.0
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME:latest .
+
+      - name: Push Docker image
+        run: docker push $IMAGE_NAME:latest
+
+  deploy:
+    needs: build_and_push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v1.0.0
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Copy files to server
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_IP }} "
-            mkdir -p ~/lapor-sadang-serang"
-          scp -o StrictHostKeyChecking=no -r ./* ubuntu@${{ secrets.SERVER_IP }}:~/lapor-sadang-serang/
-
-      - name: Build + Run Docker on server
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_IP }} "
-            cd ~/lapor-sadang-serang &&
-            docker build -t lapor-sadang-serang . &&
-            docker stop lapor-sadang-serang || true &&
-            docker rm lapor-sadang-serang || true &&
+          host: ${{ secrets.SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            echo "Login ke GHCR"
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "Pull image"
+            docker pull $IMAGE_NAME:latest
+            echo "Stop & remove container lama"
+            docker stop lapor-sadang-serang || true
+            docker rm lapor-sadang-serang || true
+            echo "Run container baru"
             docker run -d --name lapor-sadang-serang -p 3000:3000 \
               -e NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} \
               -e NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
-              lapor-sadang-serang
-          "
+              $IMAGE_NAME:latest
