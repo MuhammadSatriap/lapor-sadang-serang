@@ -47,16 +47,18 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SERVER_IP: ${{ secrets.SERVER_IP }}
           USER: ubuntu
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
         run: |
           echo "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key $USER@$SERVER_IP '
+          ssh -o StrictHostKeyChecking=no -i private_key $USER@$SERVER_IP "
+            echo 'IMAGE_NAME=$IMAGE_NAME' >> /tmp/env_vars
             docker login ghcr.io -u ${{ github.actor }} -p ${{ secrets.GITHUB_TOKEN }}
             docker pull $IMAGE_NAME:latest
             docker stop lapor-sadang-serang || true
             docker rm lapor-sadang-serang || true
             docker run -d --name lapor-sadang-serang -p 3000:3000 \
-              -e NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} \
-              -e NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
+              -e NEXT_PUBLIC_SUPABASE_URL='${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}' \
+              -e NEXT_PUBLIC_SUPABASE_ANON_KEY='${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}' \
               -e PORT=3000 \
               $IMAGE_NAME:latest
-          '
+          "

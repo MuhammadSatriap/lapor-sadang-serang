@@ -14,7 +14,7 @@ COPY . .
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-# Validasi arg biar gak undefined
+# Validasi arg
 RUN if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ]; then echo "Error: NEXT_PUBLIC_SUPABASE_URL is not set"; exit 1; fi
 RUN if [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then echo "Error: NEXT_PUBLIC_SUPABASE_ANON_KEY is not set"; exit 1; fi
 
@@ -36,7 +36,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 
-# Declare runtime env vars (default kosong, di-override pas docker run)
+# Declare runtime env vars
 ENV NEXT_PUBLIC_SUPABASE_URL=""
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=""
 ENV PORT=3000
